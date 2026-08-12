@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Storefront Prototype - UC-01</title>
+<style>
+  /* PROTOTYPE ONLY - plain styling, not final design */
+  :root{
+    --color-bg:#fff;
+    --color-text:#111;
+    --color-text-muted:#555;
+    --color-border:#999;
+    --color-border-strong:#333;
+    --color-border-subtle:#ccc;
+    --color-panel-bg:#eee;
+    --color-nav-bg:#f2f2f2;
+    --color-nav-current-bg:#333;
+    --color-nav-current-text:#fff;
+    --color-banner-bg:#fff3cd;
+    --color-banner-border:#e0c36a;
+    --color-added-bg:#c7f0c7;
+    --color-disabled-text:#888;
+    --color-badge-in-stock:#e3f3e3;
+    --color-badge-low-stock:#fff3cd;
+    --color-badge-out-of-stock:#f8d7d7;
+    --color-badge-medication:#dde8ff;
+    --color-badge-restricted:#f8d7d7;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --color-bg:#1a1a1a;
+      --color-text:#e8e8e8;
+      --color-text-muted:#aaa;
+      --color-border:#555;
+      --color-border-strong:#888;
+      --color-border-subtle:#444;
+      --color-panel-bg:#2a2a2a;
+      --color-nav-bg:#2a2a2a;
+      --color-nav-current-bg:#e8e8e8;
+      --color-nav-current-text:#1a1a1a;
+      --color-banner-bg:#4d4322;
+      --color-banner-border:#8a731f;
+      --color-added-bg:#1f4d2b;
+      --color-disabled-text:#777;
+      --color-badge-in-stock:#1f3d24;
+      --color-badge-low-stock:#4d4322;
+      --color-badge-out-of-stock:#4d2626;
+      --color-badge-medication:#26304d;
+      --color-badge-restricted:#4d2626;
+    }
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size:14px;
+    color:var(--color-text);
+    background:var(--color-bg);
+  }
+  .banner{
+    background:var(--color-banner-bg); border-bottom:1px solid var(--color-banner-border);
+    padding:6px 12px; font-size:12px; text-align:center;
+  }
+  header{ border-bottom:2px solid var(--color-border-strong); padding:10px 12px; display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
+  header button.brand{ font-weight:bold; font-size:16px; background:none; border:none; cursor:pointer; padding:0; color:var(--color-text); }
+  #searchForm{ display:flex; gap:4px; flex:1 1 260px; }
+  #searchForm input{ flex:1; padding:5px; color:var(--color-text); background:var(--color-bg); border:1px solid var(--color-border); }
+  #cartIndicator{ margin-left:auto; border:1px solid var(--color-border); padding:4px 8px; }
+
+  nav#categoryNav{ display:flex; gap:6px; padding:8px 12px; border-bottom:1px solid var(--color-border-subtle); flex-wrap:wrap; }
+  nav#categoryNav button{ padding:4px 10px; border:1px solid var(--color-border); background:var(--color-nav-bg); color:var(--color-text); cursor:pointer; }
+  nav#categoryNav button[aria-current="true"]{ background:var(--color-nav-current-bg); color:var(--color-nav-current-text); }
+
+  main{ padding:12px; }
+  .layout{ display:flex; gap:16px; align-items:flex-start; }
+  .filters{ width:200px; flex:0 0 200px; border:1px solid var(--color-border); padding:10px; }
+  .filters fieldset{ border:1px solid var(--color-border-subtle); margin:0 0 10px; padding:6px; }
+  .filters label{ display:block; font-size:13px; margin:2px 0; }
+  .price-row{ display:flex; align-items:center; gap:4px; }
+  .price-row input{ width:70px; color:var(--color-text); background:var(--color-bg); border:1px solid var(--color-border); }
+  #clearFilters{ width:100%; padding:6px; margin-top:6px; }
+
+  .results-heading{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+
+  .grid{ flex:1; display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:10px; }
+  .card{ border:1px solid var(--color-border); padding:0; display:flex; flex-direction:column; }
+  .card-open{ all:unset; box-sizing:border-box; display:block; width:100%; text-align:left; cursor:pointer; padding:8px; color:var(--color-text); }
+  .card-media{ font-size:2rem; text-align:center; background:var(--color-panel-bg); padding:10px; }
+  .card-cat{ font-size:11px; color:var(--color-text-muted); text-transform:uppercase; }
+  .card-name{ font-weight:bold; margin-top:4px; }
+  .card-name-vi{ font-style:italic; color:var(--color-text-muted); font-size:12px; }
+  .card-bottom{ display:flex; justify-content:space-between; align-items:center; margin-top:6px; }
+  .card-actions{ padding:0 8px 8px; }
+  .add-cart-btn{ width:100%; padding:6px; cursor:pointer; color:var(--color-text); background:var(--color-nav-bg); border:1px solid var(--color-border); }
+  .add-cart-btn:disabled{ cursor:not-allowed; color:var(--color-disabled-text); }
+  .add-cart-btn.added{ background:var(--color-added-bg); }
+
+  .badge{ font-size:11px; padding:2px 6px; border:1px solid var(--color-border); color:var(--color-text); }
+  .badge.in-stock{ background:var(--color-badge-in-stock); }
+  .badge.low-stock{ background:var(--color-badge-low-stock); }
+  .badge.out-of-stock{ background:var(--color-badge-out-of-stock); }
+  .badge.medication{ background:var(--color-badge-medication); }
+  .badge.restricted{ background:var(--color-badge-restricted); }
+
+  .empty-state{ grid-column:1/-1; text-align:center; border:1px dashed var(--color-border); padding:30px; }
+  .empty-suggestions{ display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
+  .empty-suggestions button{ color:var(--color-text); background:var(--color-nav-bg); border:1px solid var(--color-border); cursor:pointer; padding:4px 10px; }
+
+  .detail-back{ background:none; border:none; text-decoration:underline; cursor:pointer; padding:0 0 12px; display:block; color:var(--color-text); }
+  .detail-grid{ display:flex; gap:20px; flex-wrap:wrap; }
+  .detail-media{ width:260px; font-size:4rem; text-align:center; background:var(--color-panel-bg); padding:30px 0; }
+  .detail-cat{ font-size:12px; color:var(--color-text-muted); text-transform:uppercase; }
+  .detail-meta{ display:flex; gap:8px; align-items:center; margin:8px 0; flex-wrap:wrap; }
+  .detail-price{ font-size:1.2rem; font-weight:bold; }
+  .detail-add-cart{ padding:8px 20px; margin:8px 0 16px; cursor:pointer; color:var(--color-text); background:var(--color-nav-bg); border:1px solid var(--color-border); }
+  .detail-section{ margin-bottom:14px; }
+  .detail-section h2{ font-size:12px; text-transform:uppercase; color:var(--color-text-muted); margin:0 0 4px; }
+  .detail-section p{ margin:0; max-width:60ch; }
+
+  [hidden]{ display:none !important; }
+  .visually-hidden{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+</style>
+</head>
+<body>
+<div class="banner">Prototype for UC-01 (Browse / Search / Filter Products) &mdash; visual design not final</div>
+
+<header>
+  <button class="brand" id="homeLink">Storefront (prototype)</button>
+  <form id="searchForm" role="search">
+    <label for="searchInput" class="visually-hidden">Search products</label>
+    <input type="search" id="searchInput" placeholder="Search EN or Vietnamese, e.g. magnesium" autocomplete="off" />
+    <button type="submit">Search</button>
+  </form>
+  <span id="cartIndicator" aria-live="polite">Cart: <span id="cartCount">0</span></span>
+</header>
+
+<nav id="categoryNav" aria-label="Product categories"></nav>
+
+<main id="main">
+  <div id="view-list">
+    <div class="results-heading">
+      <h1 id="listTitle">All products</h1>
+      <span id="resultsCount"></span>
+    </div>
+    <div class="layout">
+      <aside class="filters" aria-label="Filter products">
+        <strong>Filter</strong>
+        <fieldset id="availabilityGroup">
+          <legend>Availability</legend>
+        </fieldset>
+        <div>
+          <label>Price range</label>
+          <div class="price-row">
+            <input type="number" id="minPrice" min="0" placeholder="Min" aria-label="Minimum price" />
+            <span>&ndash;</span>
+            <input type="number" id="maxPrice" min="0" placeholder="Max" aria-label="Maximum price" />
+          </div>
+        </div>
+        <button id="clearFilters" type="button">Clear all filters</button>
+      </aside>
+      <section aria-label="Product results">
+        <div class="grid" id="productGrid"></div>
+      </section>
+    </div>
+  </div>
+
+  <div id="view-detail" hidden></div>
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---- Mirrors the real backend shape (com.pharmos.category.domain.Category /
+  // com.pharmos.product.domain.Product) so this concept carries over cleanly:
+  // Category { id, nameEn, nameVi }; Product { id, categoryId, nameEn, nameVi,
+  // descriptionEn (dosage/usage folded in, per plan), price, stockQuantity,
+  // isMedication, isRestricted }. "icon" is a placeholder for imageRef, which
+  // has no real asset yet.
+
+  var CATEGORIES = [
+    { id:1, nameEn:"Vitamins & Supplements", nameVi:"Vitamin & Thực phẩm bổ sung" },
+    { id:2, nameEn:"Pain Relief", nameVi:"Giảm đau" },
+    { id:3, nameEn:"Skin Care", nameVi:"Chăm sóc da" },
+    { id:4, nameEn:"Personal Care", nameVi:"Chăm sóc cá nhân" },
+    { id:5, nameEn:"Wellness Devices", nameVi:"Thiết bị sức khỏe" }
+  ];
+  var CATEGORY_BY_ID = {};
+  CATEGORIES.forEach(function(c){ CATEGORY_BY_ID[c.id] = c; });
+
+  var PRODUCTS = [
+    { id:1, categoryId:1, icon:"☀️", nameEn:"Vitamin D3 2000 IU Softgels", nameVi:"Viên nang mềm Vitamin D3 2000 IU", price:12.99, stockQuantity:45, isMedication:false, isRestricted:false,
+      descriptionEn:"Supports bone, muscle, and immune health with easily absorbed D3 in a small softgel. Non-GMO, gluten-free, 120-count bottle. Adults: take 1 softgel daily with a meal containing fat for best absorption. Do not exceed 1 softgel per day unless directed by a physician." },
+    { id:2, categoryId:1, icon:"🧘", nameEn:"Magnesium Glycinate 200mg", nameVi:"Magnesium Glycinate 200mg", price:18.49, stockQuantity:38, isMedication:false, isRestricted:false,
+      descriptionEn:"A gentle, highly bioavailable form of magnesium to support relaxation, muscle function, and restful sleep. Take 1 capsule in the evening with food. May increase to 2 capsules as needed, spaced evenly through the day." },
+    { id:3, categoryId:1, icon:"🐟", nameEn:"Omega-3 Fish Oil 1000mg", nameVi:"Dầu cá Omega-3 1000mg", price:15.99, stockQuantity:6, isMedication:false, isRestricted:false,
+      descriptionEn:"Molecularly distilled fish oil delivering EPA and DHA to support heart and cognitive health. Enteric-coated to reduce aftertaste. Take 1 softgel twice daily with meals. Store in a cool, dry place away from direct sunlight." },
+    { id:4, categoryId:1, icon:"🌾", nameEn:"B-Complex with Folate", nameVi:"Vitamin nhóm B kèm Folate", price:11.49, stockQuantity:52, isMedication:false, isRestricted:false,
+      descriptionEn:"A full spectrum of B vitamins to support energy metabolism and nervous system health. Take 1 tablet daily in the morning with breakfast." },
+    { id:5, categoryId:2, icon:"💊", nameEn:"Ibuprofen 200mg Tablets (100ct)", nameVi:"Viên nén Ibuprofen 200mg (100 viên)", price:8.99, stockQuantity:60, isMedication:true, isRestricted:false,
+      descriptionEn:"Fast-acting pain reliever and fever reducer for headaches, muscle aches, and minor arthritis pain. Adults and children 12+: take 1 tablet every 4–6 hours with food or water while symptoms persist. Do not exceed 6 tablets in 24 hours unless directed by a doctor." },
+    { id:6, categoryId:2, icon:"💊", nameEn:"Acetaminophen 500mg Caplets", nameVi:"Viên nén Acetaminophen 500mg", price:7.49, stockQuantity:55, isMedication:true, isRestricted:false,
+      descriptionEn:"Trusted relief for headache, backache, and minor pain, gentle enough for regular use as directed. Adults: take 2 caplets every 6 hours as needed. Do not exceed 6 caplets in 24 hours." },
+    { id:7, categoryId:2, icon:"🧊", nameEn:"Cooling Muscle Relief Gel", nameVi:"Gel làm mát giảm đau cơ", price:9.99, stockQuantity:0, isMedication:true, isRestricted:false,
+      descriptionEn:"Topical menthol gel for fast, soothing relief of minor muscle and joint aches after activity. Apply a thin layer to the affected area up to 4 times daily. For external use only; wash hands after application." },
+    { id:8, categoryId:2, icon:"🩹", nameEn:"Adhesive Heat Therapy Patches", nameVi:"Miếng dán nhiệt trị liệu", price:13.99, stockQuantity:8, isMedication:false, isRestricted:false,
+      descriptionEn:"Low-level heat patches that provide up to 8 hours of soothing warmth for back and neck tension. Apply 1 patch directly to clean, dry skin. Use for up to 8 hours; allow 24 hours before reapplying to the same area." },
+    { id:9, categoryId:3, icon:"🌿", nameEn:"Aloe Vera Soothing Lotion", nameVi:"Sữa dưỡng lô hội làm dịu da", price:10.49, stockQuantity:30, isMedication:false, isRestricted:false,
+      descriptionEn:"Lightweight, fast-absorbing lotion with 98% pure aloe to calm and hydrate dry or irritated skin. Apply liberally to affected area as needed. For external use only." },
+    { id:10, categoryId:3, icon:"🧴", nameEn:"Mineral Sunscreen SPF 50", nameVi:"Kem chống nắng khoáng SPF 50", price:16.99, stockQuantity:25, isMedication:false, isRestricted:false,
+      descriptionEn:"Broad-spectrum mineral sunscreen with zinc oxide, formulated for sensitive skin and daily wear. Apply generously 15 minutes before sun exposure. Reapply at least every 2 hours, or after swimming or sweating." },
+    { id:11, categoryId:3, icon:"🧴", nameEn:"Hydrocortisone Cream 1%", nameVi:"Kem Hydrocortisone 1%", price:6.99, stockQuantity:9, isMedication:true, isRestricted:false,
+      descriptionEn:"Temporary relief from itching and irritation caused by insect bites, rashes, and minor skin conditions. Apply a thin layer to the affected area up to 3–4 times daily. Do not use for more than 7 days unless directed by a doctor." },
+    { id:12, categoryId:4, icon:"🧼", nameEn:"Hand Sanitizer Gel 70%", nameVi:"Gel rửa tay khô 70%", price:4.49, stockQuantity:70, isMedication:false, isRestricted:false,
+      descriptionEn:"70% ethyl alcohol formula that kills 99.9% of germs without water, with aloe to reduce dryness. Apply a small amount to hands and rub together until dry; no water needed." },
+    { id:13, categoryId:4, icon:"🥤", nameEn:"Electrolyte Hydration Powder", nameVi:"Bột bù điện giải", price:14.99, stockQuantity:40, isMedication:false, isRestricted:false,
+      descriptionEn:"Low-sugar electrolyte blend to help replenish fluids after exercise, illness, or heat exposure. Mix 1 packet with 16 oz of water. May be consumed up to 3 times daily as needed for hydration support." },
+    { id:14, categoryId:5, icon:"🌡️", nameEn:"Digital Infrared Thermometer", nameVi:"Nhiệt kế hồng ngoại điện tử", price:29.99, stockQuantity:7, isMedication:false, isRestricted:false,
+      descriptionEn:"No-contact forehead thermometer with fever alert and memory recall for the last 20 readings. Hold 1–2 inches from the forehead and press the measure button. Allow 1 minute between readings for accuracy." },
+    { id:15, categoryId:5, icon:"🩺", nameEn:"Automatic Blood Pressure Monitor", nameVi:"Máy đo huyết áp tự động", price:39.99, stockQuantity:15, isMedication:false, isRestricted:false,
+      descriptionEn:"Upper-arm cuff monitor with irregular heartbeat detection and a large backlit display for easy reading. Sit quietly for 5 minutes before measuring. Wrap the cuff snugly around the bare upper arm and press start; avoid talking during the reading." },
+    { id:16, categoryId:5, icon:"🫁", nameEn:"Fingertip Pulse Oximeter", nameVi:"Máy đo nồng độ oxy trong máu", price:22.99, stockQuantity:0, isMedication:false, isRestricted:false,
+      descriptionEn:"Measures blood oxygen saturation and pulse rate in seconds with a clear OLED display. Clip onto a fingertip and hold still until the reading stabilizes, typically within 10 seconds." }
+  ];
+
+  var LOW_STOCK_THRESHOLD = 10;
+  var AVAILABILITY = [
+    { key:"in-stock", label:"In stock" },
+    { key:"low-stock", label:"Low stock" },
+    { key:"out-of-stock", label:"Out of stock" }
+  ];
+  var STOCK_LABEL = { "in-stock":"In stock", "low-stock":"Low stock", "out-of-stock":"Out of stock" };
+
+  function stockStatus(qty){
+    if(qty <= 0) return "out-of-stock";
+    if(qty < LOW_STOCK_THRESHOLD) return "low-stock";
+    return "in-stock";
+  }
+
+  var state = {
+    categoryId: null, // null = "All"
+    query: "",
+    availability: new Set(AVAILABILITY.map(function(a){ return a.key; })),
+    minPrice: null,
+    maxPrice: null,
+    cartCount: 0
+  };
+
+  var categoryNav = document.getElementById("categoryNav");
+  var availabilityGroup = document.getElementById("availabilityGroup");
+  var minPriceInput = document.getElementById("minPrice");
+  var maxPriceInput = document.getElementById("maxPrice");
+  var searchInput = document.getElementById("searchInput");
+  var searchForm = document.getElementById("searchForm");
+  var clearBtn = document.getElementById("clearFilters");
+  var grid = document.getElementById("productGrid");
+  var listTitle = document.getElementById("listTitle");
+  var resultsCount = document.getElementById("resultsCount");
+  var viewList = document.getElementById("view-list");
+  var viewDetail = document.getElementById("view-detail");
+  var homeLink = document.getElementById("homeLink");
+  var cartCountEl = document.getElementById("cartCount");
+
+  function formatPrice(n){ return "$" + n.toFixed(2); }
+
+  function addToCart(btn){
+    if(btn.disabled) return;
+    state.cartCount += 1;
+    cartCountEl.textContent = state.cartCount;
+    var original = btn.textContent;
+    btn.textContent = "Added";
+    btn.classList.add("added");
+    btn.disabled = true;
+    setTimeout(function(){
+      btn.textContent = original;
+      btn.classList.remove("added");
+      btn.disabled = false;
+    }, 1200);
+  }
+
+  function buildCategoryNav(){
+    categoryNav.innerHTML = "";
+    var entries = [{ id:null, nameEn:"All" }].concat(CATEGORIES);
+    entries.forEach(function(cat){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = cat.nameEn;
+      btn.setAttribute("aria-current", String(state.categoryId === cat.id));
+      btn.addEventListener("click", function(){
+        state.categoryId = cat.id;
+        goToList();
+      });
+      categoryNav.appendChild(btn);
+    });
+  }
+
+  function buildAvailabilityFilters(){
+    availabilityGroup.innerHTML = '<legend>Availability</legend>';
+    AVAILABILITY.forEach(function(opt){
+      var id = "avail-" + opt.key;
+      var label = document.createElement("label");
+      label.setAttribute("for", id);
+      var input = document.createElement("input");
+      input.type = "checkbox";
+      input.id = id;
+      input.checked = state.availability.has(opt.key);
+      input.addEventListener("change", function(){
+        if(input.checked){ state.availability.add(opt.key); }
+        else{ state.availability.delete(opt.key); }
+        renderGrid();
+      });
+      label.appendChild(input);
+      label.appendChild(document.createTextNode(" " + opt.label));
+      availabilityGroup.appendChild(label);
+    });
+  }
+
+  function matchesFilters(p){
+    if(state.categoryId !== null && p.categoryId !== state.categoryId) return false;
+    if(state.query){
+      var q = state.query.toLowerCase();
+      var catName = CATEGORY_BY_ID[p.categoryId].nameEn;
+      var haystack = (p.nameEn + " " + p.nameVi + " " + p.descriptionEn + " " + catName).toLowerCase();
+      if(haystack.indexOf(q) === -1) return false;
+    }
+    if(!state.availability.has(stockStatus(p.stockQuantity))) return false;
+    if(state.minPrice !== null && p.price < state.minPrice) return false;
+    if(state.maxPrice !== null && p.price > state.maxPrice) return false;
+    return true;
+  }
+
+  function renderGrid(){
+    var results = PRODUCTS.filter(matchesFilters);
+
+    listTitle.textContent = state.query
+      ? 'Results for "' + state.query + '"'
+      : (state.categoryId === null ? "All products" : CATEGORY_BY_ID[state.categoryId].nameEn);
+    resultsCount.textContent = results.length + (results.length === 1 ? " product" : " products");
+
+    grid.innerHTML = "";
+    if(results.length === 0){
+      var empty = document.createElement("div");
+      empty.className = "empty-state";
+      var suggestions = CATEGORIES.filter(function(c){ return c.id !== state.categoryId; });
+      empty.innerHTML =
+        "<h3>No products match your filters</h3><p>Try a different keyword or clear a filter, or browse a category below.</p>" +
+        '<div class="empty-suggestions" id="emptySuggestions"></div>';
+      grid.appendChild(empty);
+      var suggestionsEl = document.getElementById("emptySuggestions");
+      suggestions.forEach(function(cat){
+        var pill = document.createElement("button");
+        pill.type = "button";
+        pill.textContent = cat.nameEn;
+        pill.addEventListener("click", function(){
+          state.categoryId = cat.id;
+          state.query = "";
+          searchInput.value = "";
+          goToList();
+        });
+        suggestionsEl.appendChild(pill);
+      });
+      return;
+    }
+
+    results.forEach(function(p){
+      var status = stockStatus(p.stockQuantity);
+      var category = CATEGORY_BY_ID[p.categoryId];
+      var tags = "";
+      if(p.isMedication) tags += '<span class="badge medication">Rx/OTC drug</span>';
+      if(p.isRestricted) tags += '<span class="badge restricted">Age-restricted</span>';
+
+      var card = document.createElement("div");
+      card.className = "card";
+
+      var openBtn = document.createElement("button");
+      openBtn.className = "card-open";
+      openBtn.type = "button";
+      openBtn.setAttribute("aria-label", "View details for " + p.nameEn + ", " + formatPrice(p.price) + ", " + STOCK_LABEL[status]);
+      openBtn.innerHTML =
+        '<div class="card-media" aria-hidden="true">' + p.icon + '</div>' +
+        '<div class="card-cat">' + category.nameEn + '</div>' +
+        (tags ? '<div class="card-tags">' + tags + '</div>' : '') +
+        '<div class="card-name">' + p.nameEn + '</div>' +
+        '<div class="card-name-vi">' + p.nameVi + '</div>' +
+        '<div class="card-bottom">' +
+          '<span class="price">' + formatPrice(p.price) + '</span>' +
+          '<span class="badge ' + status + '">' + STOCK_LABEL[status] + '</span>' +
+        '</div>';
+      openBtn.addEventListener("click", function(){ goToDetail(p.id); });
+
+      var actions = document.createElement("div");
+      actions.className = "card-actions";
+      var addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "add-cart-btn";
+      addBtn.textContent = "Add to cart";
+      if(status === "out-of-stock"){
+        addBtn.disabled = true;
+        addBtn.title = "Out of stock";
+      }
+      addBtn.addEventListener("click", function(){ addToCart(addBtn); });
+      actions.appendChild(addBtn);
+
+      card.appendChild(openBtn);
+      card.appendChild(actions);
+      grid.appendChild(card);
+    });
+  }
+
+  function renderDetail(product){
+    var status = stockStatus(product.stockQuantity);
+    var category = CATEGORY_BY_ID[product.categoryId];
+    var tags = "";
+    if(product.isMedication) tags += '<span class="badge medication">Rx/OTC drug</span>';
+    if(product.isRestricted) tags += '<span class="badge restricted">Age-restricted</span>';
+
+    viewDetail.innerHTML =
+      '<button class="detail-back" type="button" id="backBtn">&larr; Back to results</button>' +
+      '<div class="detail-grid">' +
+        '<div class="detail-media" aria-hidden="true">' + product.icon + '</div>' +
+        '<div>' +
+          '<div class="detail-cat">' + category.nameEn + '</div>' +
+          '<h1>' + product.nameEn + '</h1>' +
+          '<p><em>' + product.nameVi + '</em></p>' +
+          '<div class="detail-meta">' +
+            '<span class="detail-price">' + formatPrice(product.price) + '</span>' +
+            '<span class="badge ' + status + '">' + STOCK_LABEL[status] + '</span>' +
+            tags +
+          '</div>' +
+          '<button type="button" class="detail-add-cart" id="detailAddBtn"' +
+            (status === "out-of-stock" ? ' disabled title="Out of stock"' : '') + '>Add to cart</button>' +
+          '<div class="detail-section">' +
+            '<h2>Description</h2>' +
+            '<p>' + product.descriptionEn + '</p>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    document.getElementById("backBtn").addEventListener("click", goToList);
+    var detailAddBtn = document.getElementById("detailAddBtn");
+    detailAddBtn.addEventListener("click", function(){ addToCart(detailAddBtn); });
+  }
+
+  function goToList(){
+    buildCategoryNav();
+    renderGrid();
+    viewDetail.hidden = true;
+    viewList.hidden = false;
+    window.scrollTo(0, 0);
+  }
+
+  function goToDetail(id){
+    var product = PRODUCTS.filter(function(p){ return p.id === id; })[0];
+    if(!product) return;
+    renderDetail(product);
+    viewList.hidden = true;
+    viewDetail.hidden = false;
+    window.scrollTo(0, 0);
+  }
+
+  searchForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    state.query = searchInput.value.trim();
+    state.categoryId = null;
+    goToList();
+  });
+
+  minPriceInput.addEventListener("input", function(){
+    var v = minPriceInput.value;
+    state.minPrice = v === "" ? null : Number(v);
+    renderGrid();
+  });
+  maxPriceInput.addEventListener("input", function(){
+    var v = maxPriceInput.value;
+    state.maxPrice = v === "" ? null : Number(v);
+    renderGrid();
+  });
+
+  clearBtn.addEventListener("click", function(){
+    state.categoryId = null;
+    state.query = "";
+    state.minPrice = null;
+    state.maxPrice = null;
+    state.availability = new Set(AVAILABILITY.map(function(a){ return a.key; }));
+    searchInput.value = "";
+    minPriceInput.value = "";
+    maxPriceInput.value = "";
+    buildAvailabilityFilters();
+    goToList();
+  });
+
+  homeLink.addEventListener("click", function(){
+    state.categoryId = null;
+    state.query = "";
+    searchInput.value = "";
+    goToList();
+  });
+
+  buildCategoryNav();
+  buildAvailabilityFilters();
+  renderGrid();
+})();
+</script>
+</body>
+</html>
